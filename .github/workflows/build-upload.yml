@@ -20,7 +20,7 @@ jobs:
         run: conda install -y conda-build anaconda-client
         
       - name: Build the conda package
-        run: conda build .
+        run: conda-build .
         
       - name: Upload to Anaconda
         env:
