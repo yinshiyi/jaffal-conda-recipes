@@ -1,0 +1,34 @@
+name: Build and Upload to Anaconda
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          
+      - name: Install build tools and anaconda-client
+        run: conda install -y conda-build anaconda-client
+        
+      - name: Build the conda package
+        run: conda build .
+        
+      - name: Upload to Anaconda
+        env:
+          ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
+          ANACONDA_USER: yinshiyi
+        # The exact path to the built package depends on your conda-build setup and output format
+        run: |
+            anaconda config --set url https://api.anaconda.org
+            PACKAGE=$(conda build --output .)
+            anaconda -t $ANACONDA_TOKEN upload \
+                --user "$ANACONDA_USER" \
+                "$PACKAGE"
