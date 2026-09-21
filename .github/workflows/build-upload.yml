@@ -15,6 +15,8 @@ jobs:
         with:
           auto-update-conda: true
           extra-specs: conda-build
+          channels: conda-forge,bioconda,defaults
+          channel-priority: flexible
           
       - name: Install build tools and anaconda-client
         run: conda install -y conda-build anaconda-client
