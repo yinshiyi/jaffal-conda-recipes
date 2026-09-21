@@ -14,6 +14,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
+          extra-specs: conda-build
           
       - name: Install build tools and anaconda-client
         run: conda install -y conda-build anaconda-client
