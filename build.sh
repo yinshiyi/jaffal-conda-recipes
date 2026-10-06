@@ -6,7 +6,7 @@ PACKAGE_HOME=$PREFIX/share/$PKG_NAME-$PKG_VERSION-$PKG_BUILDNUM
 
 # Create destination directories
 mkdir -p $PACKAGE_HOME
-mkdir -p ${PREFIX}/bin
+mkdir -p $BINARY_HOME
 
 # Copy files over into $PACKAGE_HOME
 cp -aR * $PACKAGE_HOME
@@ -22,8 +22,9 @@ for tool in \
     make_simple_read_table \
     make_simple_read_table_assembly \
     compile_results \
-    split_fusion_reads; do
-    $CXX -std=c++11 -O3 -o "$PREFIX/bin/$tool" "$PACKAGE_HOME/src/$tool.c++"
+    split_fusion_reads \
+    prepare_ref_helper; do
+    $CXX -std=c++11 -O3 -o "$BINARY_HOME/$tool" "$PACKAGE_HOME/src/$tool.c++"
 done
 
 # Create wrappers
@@ -45,3 +46,21 @@ for suffix in direct assembly hybrid jaffal; do
         ln -s $DEST_FILE $PREFIX/bin/jaffa-$suffix
     fi
 done
+
+# prepare_jaffa_reference.sh looks up every tool at <JAFFA_PATH>/tools/bin/<name>
+# (the layout install_linux64.sh creates). Recreate that layout inside the package
+# with symlinks to the conda binaries, renaming where JAFFA expects a different
+# name. conda-build rewrites these absolute links as relative ones.
+mkdir -p $PACKAGE_HOME/tools/bin
+for pair in prepare_ref_helper:prepare_ref_helper gffread_bin:gffread reformat:reformat.sh \
+            bedtools:bedtools minimap2:minimap2 bowtie2-build:bowtie2-build \
+            makeblastdb:makeblastdb gtfToGenePred:gtfToGenePred; do
+    ln -s $BINARY_HOME/${pair#*:} $PACKAGE_HOME/tools/bin/${pair%%:*}
+done
+
+# Expose the reference builder with JAFFA_PATH pre-filled
+PREPARE_DEST=$BINARY_HOME/prepare_jaffa_reference.sh
+echo "#!/bin/bash" > $PREPARE_DEST
+echo "export PATH=\"\$(dirname \"\$0\"):\$PATH\"" >> $PREPARE_DEST
+echo "exec bash $PACKAGE_HOME/prepare_jaffa_reference.sh $PACKAGE_HOME \"\$@\"" >> $PREPARE_DEST
+chmod +x $PREPARE_DEST

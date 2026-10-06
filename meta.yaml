@@ -1,18 +1,18 @@
 {% set name = "jaffa" %}
-{% set version = "2.5" %}
+{% set version = "2.5.1" %}
 
 package:
   name: {{ name }}
   version: {{ version }}
 
 source:
-  url: https://github.com/Oshlack/JAFFA/releases/download/version-{{ version }}/JAFFA-version-{{ version }}.tar.gz
-  sha256: d4123facd165f985a290221366b7750b522b29876387d2491c57000c1865699e
+  url: https://github.com/yinshiyi/JAFFA/archive/refs/tags/version-{{ version }}.tar.gz
+  sha256: 3af3c8a5c981e4999cae5216e69eb676945782cdea259a07038c4e0895cb2053
   patches:
     - jaffa.patch
 
 build:
-  number: 1
+  number: 2
   run_exports:
     - {{ pin_subpackage(name, max_pin="x") }}
 
@@ -27,11 +27,18 @@ requirements:
   # Pinning to 1.1 is required as JAFFA does not know about new samtools sort syntax
   - samtools ==1.1
   - bowtie2
-  - ucsc-blat
+  # samtools 1.1 forces openssl 1.1; newer ucsc-* builds (>=466) declare only
+  # libopenssl-static but dynamically link libssl.so.3, so they fail to load
+  - ucsc-blat ==445
   - fastx_toolkit
   - bbmap
   - bioconductor-iranges
   - minimap2
+  - blast
+  # used only by prepare_jaffa_reference.sh
+  - gffread
+  - bedtools
+  - ucsc-gtftogenepred ==447
 
 # Testing JAFFA is impossible without many resource files.
 #test:
